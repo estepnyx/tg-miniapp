@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Создание заявки</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; padding: 16px; }
+    label { display:block; margin: 12px 0 6px; }
+    input, textarea, button { width:100%; padding: 12px; font-size: 16px; }
+    button { margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <h2>Создание заявки</h2>
+
+  <label>Откуда</label>
+  <input id="pickup" placeholder="Адрес отправления" />
+
+  <label>Куда</label>
+  <input id="delivery" placeholder="Адрес доставки" />
+
+  <label>Дата</label>
+  <input id="date" type="date" />
+
+  <label>Комментарий</label>
+  <textarea id="comment" rows="3"></textarea>
+
+  <button id="send">Отправить</button>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    tg?.ready(); tg?.expand();
+
+    // ⚠️ ПОТОМ ВСТАВИШЬ СЮДА URL ВЕБХУКА n8n
+    const N8N_WEBHOOK_URL = "PASTE_WEBHOOK_URL_HERE";
+
+    document.getElementById('send').onclick = async () => {
+      const payload = {
+        initData: tg?.initData || null,
+        user: tg?.initDataUnsafe?.user || null,
+        pickup: document.getElementById('pickup').value.trim(),
+        delivery: document.getElementById('delivery').value.trim(),
+        date: document.getElementById('date').value,
+        comment: document.getElementById('comment').value.trim() || null
+      };
+
+      if (!payload.pickup || !payload.delivery || !payload.date) {
+        return alert("Заполни откуда, куда и дату");
+      }
+
+      const r = await fetch(N8N_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (r.ok) tg?.showPopup({ title: "Готово", message: "Заявка отправлена ✅" });
+      else tg?.showPopup({ title: "Ошибка", message: "Не удалось отправить" });
+    };
+  </script>
+</body>
+</html>
