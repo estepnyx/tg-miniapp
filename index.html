@@ -4,61 +4,223 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Создание заявки</title>
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; padding: 16px; }
-    label { display:block; margin: 12px 0 6px; }
-    input, textarea, button { width:100%; padding: 12px; font-size: 16px; }
-    button { margin-top: 16px; }
+    :root {
+      --bg-gradient: linear-gradient(135deg, #ede9fe, #f5f3ff);
+      --card-bg: #ffffff;
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text-main);
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin: 12px 0 20px;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      outline: none;
+      margin-bottom: 14px;
+      transition: border 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+    }
+
+    textarea {
+      resize: none;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row > div {
+      flex: 1;
+    }
+
+    .submit {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+    }
+
+    .submit:hover {
+      background: var(--primary-hover);
+    }
+
+    .submit:active {
+      transform: scale(0.98);
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
   </style>
 </head>
 <body>
-  <h2>Создание заявки</h2>
+  <div class="container">
+    <div class="header">
+      <h1>Создание заявки</h1>
+      <p>Заполните данные перевозки</p>
+    </div>
 
-  <label>Откуда</label>
-  <input id="pickup" placeholder="Адрес отправления" />
+    <div class="card">
+      <label>Откуда</label>
+      <input id="pickup" placeholder="Адрес отправления" />
 
-  <label>Куда</label>
-  <input id="delivery" placeholder="Адрес доставки" />
+      <label>Куда</label>
+      <input id="delivery" placeholder="Адрес доставки" />
 
-  <label>Дата</label>
-  <input id="date" type="date" />
+      <div class="row">
+        <div>
+          <label>Дата</label>
+          <input id="date" type="date" />
+        </div>
+        <div>
+          <label>Время</label>
+          <input id="time" type="time" />
+        </div>
+      </div>
 
-  <label>Комментарий</label>
-  <textarea id="comment" rows="3"></textarea>
+      <label>Комментарий</label>
+      <textarea id="comment" rows="3" placeholder="Детали, пожелания…"></textarea>
 
-  <button id="send">Отправить</button>
+      <button class="submit" id="send">Создать заявку</button>
+    </div>
+
+    <div class="footer">
+      Данные отправляются безопасно
+    </div>
+  </div>
 
   <script>
     const tg = window.Telegram?.WebApp;
-    tg?.ready(); tg?.expand();
+    tg?.ready();
+    tg?.expand();
 
-    // ⚠️ ПОТОМ ВСТАВИШЬ СЮДА URL ВЕБХУКА n8n
+    // 🔴 СЮДА ВСТАВЬ URL ВЕБХУКА n8n
     const N8N_WEBHOOK_URL = "PASTE_WEBHOOK_URL_HERE";
 
+    function buildDatetime(date, time) {
+      if (!date) return null;
+      return `${date}T${time || "00:00"}:00`;
+    }
+
     document.getElementById('send').onclick = async () => {
+      const pickup = document.getElementById('pickup').value.trim();
+      const delivery = document.getElementById('delivery').value.trim();
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+      const comment = document.getElementById('comment').value.trim() || null;
+
+      if (!pickup || !delivery || !date) {
+        tg?.showPopup({
+          title: "Ошибка",
+          message: "Заполните адреса и дату"
+        });
+        return;
+      }
+
       const payload = {
         initData: tg?.initData || null,
         user: tg?.initDataUnsafe?.user || null,
-        pickup: document.getElementById('pickup').value.trim(),
-        delivery: document.getElementById('delivery').value.trim(),
-        date: document.getElementById('date').value,
-        comment: document.getElementById('comment').value.trim() || null
+        form: {
+          pickup_address: pickup,
+          delivery_address: delivery,
+          pickup_datetime: buildDatetime(date, time),
+          comment
+        }
       };
 
-      if (!payload.pickup || !payload.delivery || !payload.date) {
-        return alert("Заполни откуда, куда и дату");
+      try {
+        const r = await fetch(N8N_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!r.ok) throw new Error();
+
+        tg?.showPopup({
+          title: "Готово",
+          message: "Заявка успешно создана ✅"
+        });
+      } catch {
+        tg?.showPopup({
+          title: "Ошибка",
+          message: "Не удалось отправить заявку"
+        });
       }
-
-      const r = await fetch(N8N_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (r.ok) tg?.showPopup({ title: "Готово", message: "Заявка отправлена ✅" });
-      else tg?.showPopup({ title: "Ошибка", message: "Не удалось отправить" });
     };
   </script>
 </body>
 </html>
+
