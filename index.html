@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Создание заявки</title>
+  <title>Создание заявки на перевозку</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -85,8 +85,8 @@
       <label>Куда</label>
       <input id="delivery" placeholder="Адрес доставки" />
 
-      <label>Дата и время доставки</label>
-      <input id="delivery_dt" type="datetime-local" />
+      <label>Дата и время отправления</label>
+      <input id="pickup_dt" type="datetime-local" />
 
       <div class="row">
         <div>
@@ -143,7 +143,7 @@
     document.getElementById('send').onclick = async () => {
       const pickup = document.getElementById('pickup').value.trim();
       const delivery = document.getElementById('delivery').value.trim();
-      const delivery_dt = normalizeDatetimeLocal(document.getElementById('delivery_dt').value);
+      const pickup_dt = normalizeDatetimeLocal(document.getElementById('pickup_dt').value);
 
       const container_type = document.getElementById('container_type').value || null;
       const container_number = document.getElementById('container_number').value.trim() || null;
@@ -154,7 +154,7 @@
       const cargo_name = document.getElementById('cargo_name').value.trim() || null;
       const comment = document.getElementById('comment').value.trim() || null;
 
-      if (!pickup || !delivery || !delivery_dt) {
+      if (!pickup || !delivery || !pickup_dt) {
         tg?.showPopup({ title: "Ошибка", message: "Заполните: Откуда, Куда, Дата и время доставки" });
         return;
       }
@@ -165,7 +165,7 @@
         form: {
           pickup_address: pickup,
           delivery_address: delivery,
-          delivery_datetime: delivery_dt,
+          delivery_datetime: pickup_dt,
 
           container_type,
           container_number,
