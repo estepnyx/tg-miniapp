@@ -187,10 +187,15 @@
         const resp = await r.json().catch(() => ({}));
         if (!r.ok || resp.ok === false) throw new Error("send_failed");
 
-        tg?.showPopup({
+        tg?.showPopup(
+        {
           title: "Готово",
           message: `Заявка создана ✅${resp.request_id ? " №" + resp.request_id : ""}`
-        });
+        },
+        () => {
+        tg?.close();
+             } 
+        );
       } catch (e) {
         tg?.showPopup({ title: "Ошибка", message: "Не удалось отправить заявку" });
       }
